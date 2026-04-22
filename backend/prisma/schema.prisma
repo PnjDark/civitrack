@@ -1,0 +1,60 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  password     String
+  role         Role     @default(CITIZEN)
+  department   String?  // for officers: "roads", "water", "sanitation", "electricity"
+  complaints   Complaint[] @relation("CitizenComplaints")
+  assignedComplaints Complaint[] @relation("AssignedComplaints")
+  createdAt    DateTime @default(now())
+}
+
+model Complaint {
+  id          String   @id @default(uuid())
+  title       String
+  description String
+  location    Json     // { lat: number, lng: number }
+  category    String   // roads, water, sanitation, electricity
+  status      Status   @default(PENDING)
+  assignedTo  String?  // user id of officer
+  citizenId   String
+  citizen     User     @relation("CitizenComplaints", fields: [citizenId], references: [id])
+  assignedOfficer User?  @relation("AssignedComplaints", fields: [assignedTo], references: [id])
+  slaDeadline DateTime
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  events      StatusEvent[]
+}
+
+model StatusEvent {
+  id          String   @id @default(uuid())
+  complaintId String
+  complaint   Complaint @relation(fields: [complaintId], references: [id])
+  oldStatus   Status
+  newStatus   Status
+  changedBy   String   // user id
+  createdAt   DateTime @default(now())
+}
+
+enum Role {
+  CITIZEN
+  OFFICER
+  ADMIN
+}
+
+enum Status {
+  PENDING
+  ASSIGNED
+  IN_PROGRESS
+  RESOLVED
+  REJECTED
+}

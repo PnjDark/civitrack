@@ -1,0 +1,15 @@
+# Dependencies
+/node_modules
+
+# Prisma
+/node_modules/.prisma/client
+
+# ENV
+.env
+
+# build
+/dist
+/tsconfig.tsbuildinfo
+
+# Misc
+.cache
